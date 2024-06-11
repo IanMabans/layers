@@ -4,7 +4,7 @@ import '../model/eggCollection.dart';
 import '../model/egg_collection_provider.dart';
 
 class RecordEggCountsScreen extends StatefulWidget {
-  const RecordEggCountsScreen({super.key});
+  const RecordEggCountsScreen({Key? key}) : super(key: key);
 
   @override
   _RecordEggCountsScreenState createState() => _RecordEggCountsScreenState();
@@ -20,6 +20,15 @@ class _RecordEggCountsScreenState extends State<RecordEggCountsScreen> {
       final count = int.parse(_countController.text);
       final newCollection = EggCollection(date: _selectedDate, count: count);
       await Provider.of<EggCollectionProvider>(context, listen: false).addCollection(newCollection);
+
+      // Show a snackbar to indicate successful submission
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Egg counts recorded successfully'),
+          duration: Duration(seconds: 2), // Adjust duration as needed
+        ),
+      );
+
       Navigator.of(context).pop();
     }
   }

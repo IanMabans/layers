@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:table_calendar/table_calendar.dart';
 import 'package:provider/provider.dart';
-import '../model/eggCollection.dart';
+import 'package:table_calendar/table_calendar.dart';
 import '../model/egg_collection_provider.dart';
+import '../reports/pdf_report_generator.dart';
 
 class CalendarScreen extends StatefulWidget {
   const CalendarScreen({super.key});
@@ -17,6 +17,17 @@ class _CalendarScreenState extends State<CalendarScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Manage Calendar'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.picture_as_pdf),
+            onPressed: () async {
+              final provider = Provider.of<EggCollectionProvider>(context, listen: false);
+              final collections = provider.collections;
+              final pdfGenerator = PdfReportGenerator();
+              await pdfGenerator.generateReport(collections, context);
+            },
+          ),
+        ],
       ),
       body: Consumer<EggCollectionProvider>(
         builder: (context, provider, child) {

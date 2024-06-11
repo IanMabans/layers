@@ -20,7 +20,7 @@ class DatabaseHelper {
       join(await getDatabasesPath(), 'egg_collector.db'),
       onCreate: (db, version) {
         return db.execute(
-          'CREATE TABLE egg_collections(id INTEGER PRIMARY KEY, date TEXT, count INTEGER, feedCost REAL)', // Ensure feedCost column is created
+          'CREATE TABLE egg_collections(id INTEGER PRIMARY KEY AUTOINCREMENT, date TEXT, count INTEGER DEFAULT 0, feedCost REAL DEFAULT 0.0)',
         );
       },
       version: 1,
@@ -32,11 +32,29 @@ class DatabaseHelper {
     await db.insert('egg_collections', collection.toMap(), conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
+  Future<void> updateEggCollection(EggCollection collection) async {
+    final db = await database;
+    await db.update('egg_collections', collection.toMap(), where: 'id = ?', whereArgs: [collection.id]);
+  }
+
   Future<List<EggCollection>> getEggCollections() async {
     final db = await database;
     final List<Map<String, dynamic>> maps = await db.query('egg_collections');
     return List.generate(maps.length, (i) {
       return EggCollection.fromMap(maps[i]);
     });
+  }
+
+  Future<EggCollection?> getEggCollectionByDate(DateTime date) async {
+    final db = await database;
+    final List<Map<String, dynamic>> maps = await db.query(
+      'egg_collections',
+      where: 'date = ?',
+      whereArgs: [date.toIso8601String()],
+    );
+    if (maps.isNotEmpty) {
+      return EggCollection.fromMap(maps.first);
+    }
+    return null;
   }
 }
