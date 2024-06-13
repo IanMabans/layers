@@ -21,7 +21,8 @@ class _CalendarScreenState extends State<CalendarScreen> {
           IconButton(
             icon: const Icon(Icons.picture_as_pdf),
             onPressed: () async {
-              final provider = Provider.of<EggCollectionProvider>(context, listen: false);
+              final provider =
+                  Provider.of<EggCollectionProvider>(context, listen: false);
               final collections = provider.collections;
               final pdfGenerator = PdfReportGenerator();
               await pdfGenerator.generateReport(collections, context);
@@ -71,21 +72,28 @@ class _CalendarScreenState extends State<CalendarScreen> {
             ),
             onDaySelected: (selectedDay, focusedDay) {
               final events = provider.collections
-                  .where((collection) => isSameDay(collection.date, selectedDay))
+                  .where(
+                      (collection) => isSameDay(collection.date, selectedDay))
                   .toList();
 
               showDialog(
                 context: context,
                 builder: (context) => AlertDialog(
-                  title: Text('Details on ${selectedDay.toLocal().toString().split(' ')[0]}'),
+                  title: Text(
+                      'Details on ${selectedDay.toLocal().toString().split(' ')[0]}'),
                   content: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: events.isEmpty
                         ? [const Text('No data for this day.')]
-                        : events.map((event) => ListTile(
-                      title: Text('Collected: ${event.count} eggs'),
-                      subtitle: Text('Feed Cost: \$${event.feedCost}'),
-                    )).toList(),
+                        : events
+                            .map(
+                              (event) => ListTile(
+                                title: Text('Collected: ${event.count} eggs'),
+                                subtitle:
+                                    Text('Feed Cost: \$${event.feedCost}'),
+                              ),
+                            )
+                            .toList(),
                   ),
                   actions: [
                     TextButton(
@@ -108,7 +116,8 @@ class _CalendarScreenState extends State<CalendarScreen> {
     );
   }
 
-  void _showFeedCostDialog(BuildContext context, EggCollectionProvider provider, DateTime date) {
+  void _showFeedCostDialog(
+      BuildContext context, EggCollectionProvider provider, DateTime date) {
     final TextEditingController _costController = TextEditingController();
 
     showDialog(

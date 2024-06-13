@@ -19,7 +19,8 @@ class _RecordEggCountsScreenState extends State<RecordEggCountsScreen> {
     if (_formKey.currentState!.validate()) {
       final count = int.parse(_countController.text);
       final newCollection = EggCollection(date: _selectedDate, count: count);
-      await Provider.of<EggCollectionProvider>(context, listen: false).addCollection(newCollection);
+      await Provider.of<EggCollectionProvider>(context, listen: false)
+          .addCollection(newCollection);
 
       // Show a snackbar to indicate successful submission
       ScaffoldMessenger.of(context).showSnackBar(
@@ -54,14 +55,16 @@ class _RecordEggCountsScreenState extends State<RecordEggCountsScreen> {
         title: const Text('Record Your Egg Counts'), // More friendly title
         centerTitle: true, // Center the title for better alignment
       ),
-      body: SingleChildScrollView( // Allow content to scroll if needed
+      body: SingleChildScrollView(
+        // Allow content to scroll if needed
         padding: const EdgeInsets.all(16.0),
         child: Form(
           key: _formKey,
           child: Column(
             children: [
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween, // Align label and button
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                // Align label and button
                 children: [
                   const Text(
                     'Date:',
@@ -84,7 +87,8 @@ class _RecordEggCountsScreenState extends State<RecordEggCountsScreen> {
                   labelText: 'Enter Egg Count',
                   hintText: 'e.g., 3', // Helpful hint for users
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8.0), // Rounded corners for a softer look
+                    borderRadius: BorderRadius.circular(
+                        8.0), // Rounded corners for a softer look
                   ),
                 ),
                 validator: (value) {
@@ -99,7 +103,8 @@ class _RecordEggCountsScreenState extends State<RecordEggCountsScreen> {
                 onPressed: _submitData,
                 style: ElevatedButton.styleFrom(
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8.0), // Rounded corners for the button
+                    borderRadius: BorderRadius.circular(
+                        8.0), // Rounded corners for the button
                   ),
                 ),
                 child: const Text('Submit'),

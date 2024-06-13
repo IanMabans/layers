@@ -4,9 +4,8 @@ import 'Feeds.dart';
 import 'RecordEgg.dart';
 import 'View Data.dart';
 
-
 class HomeScreen extends StatelessWidget {
-   HomeScreen({super.key});
+  HomeScreen({super.key});
 
   final double horizontalPadding = 40;
   final double verticalPadding = 25;
