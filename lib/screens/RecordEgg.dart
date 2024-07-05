@@ -18,7 +18,7 @@ class _RecordFeedCostScreenState extends State<RecordFeedCostScreen> {
       context: context,
       initialDate: selectedDate,
       firstDate: DateTime(2021),
-      lastDate: DateTime.now(), // Adjusted to limit future dates
+      lastDate: DateTime.now(),
     );
     if (pickedDate != null) {
       setState(() {
@@ -38,6 +38,24 @@ class _RecordFeedCostScreenState extends State<RecordFeedCostScreen> {
             onPressed: () {
               Navigator.of(context).pop(); // Close the dialog
               Navigator.of(context).pop(); // Go back to the previous screen
+            },
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void showErrorDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Error!'),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop(); // Close the dialog
             },
             child: const Text('OK'),
           ),
@@ -75,7 +93,12 @@ class _RecordFeedCostScreenState extends State<RecordFeedCostScreen> {
             const SizedBox(height: 20),
             TextField(
               controller: costController,
-              decoration: const InputDecoration(labelText: 'Cost'),
+              decoration: const InputDecoration(
+                labelText: 'Cost',
+                hintText: 'Enter feed cost',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.attach_money),
+              ),
               keyboardType: TextInputType.number,
             ),
             const SizedBox(height: 20),
@@ -84,10 +107,14 @@ class _RecordFeedCostScreenState extends State<RecordFeedCostScreen> {
               children: [
                 ElevatedButton(
                   onPressed: () {
-                    final cost = double.tryParse(costController.text) ?? 0.0;
-                    Provider.of<EggCollectionProvider>(context, listen: false)
-                        .updateFeedCost(selectedDate, cost);
-                    showSuccessDialog('Feed cost successfully recorded.');
+                    final cost = double.tryParse(costController.text);
+                    if (cost == null || cost <= 0) {
+                      showErrorDialog('Please enter a valid cost.');
+                    } else {
+                      Provider.of<EggCollectionProvider>(context, listen: false)
+                          .updateFeedCost(selectedDate, cost);
+                      showSuccessDialog('Feed cost successfully recorded.');
+                    }
                   },
                   style: ElevatedButton.styleFrom(
                     shape: RoundedRectangleBorder(
@@ -134,7 +161,6 @@ class _RecordFeedCostScreenState extends State<RecordFeedCostScreen> {
               Provider.of<EggCollectionProvider>(context, listen: false)
                   .deleteCollectionByDate(date);
               Navigator.of(context).pop();
-              Navigator.of(context).pop(); // Go back to the previous screen
               showSuccessDialog('Record deleted successfully.');
             },
             child: const Text('Delete'),

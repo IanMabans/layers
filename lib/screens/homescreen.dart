@@ -14,21 +14,25 @@ class HomeScreen extends StatelessWidget {
     {
       'name': 'Record Eggs',
       'icon': Icons.egg,
+      'description': 'Record daily egg counts',
       'route': const RecordEggCountsScreen(),
     },
     {
       'name': 'View Graphs',
       'icon': Icons.bar_chart,
+      'description': 'Visualize your data in graphs',
       'route': const ViewDataInGraphsScreen(),
     },
     {
       'name': 'View Calendar',
       'icon': Icons.calendar_today,
+      'description': 'Manage your calendar',
       'route': const CalendarScreen(),
     },
     {
       'name': 'Record Feed Costs',
       'icon': Icons.attach_money,
+      'description': 'Log feed expenses',
       'route': const RecordFeedCostScreen(),
     },
   ];
@@ -38,7 +42,51 @@ class HomeScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
-        title: const Text('Mother Hen 🐔', style: TextStyle(fontSize: 34),),
+        title: const Text(
+          'Mother Hen 🐔',
+          style: TextStyle(fontSize: 34),
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings),
+            onPressed: () {
+              // Navigate to settings screen (to be implemented)
+            },
+          ),
+        ],
+      ),
+      drawer: Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: <Widget>[
+            DrawerHeader(
+              decoration: BoxDecoration(
+                color: Colors.amberAccent,
+              ),
+              child: Text(
+                'User Profile',
+                style: TextStyle(
+                  color: Colors.black,
+                  fontSize: 24,
+                ),
+              ),
+            ),
+            ListTile(
+              leading: Icon(Icons.account_circle),
+              title: Text('Profile'),
+              onTap: () {
+                // Navigate to profile screen (to be implemented)
+              },
+            ),
+            ListTile(
+              leading: Icon(Icons.feedback),
+              title: Text('Feedback'),
+              onTap: () {
+                // Navigate to feedback screen (to be implemented)
+              },
+            ),
+          ],
+        ),
       ),
       body: Padding(
         padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
@@ -60,8 +108,8 @@ class HomeScreen extends StatelessWidget {
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 2,
                   childAspectRatio: 1 / 1.3,
-                  mainAxisSpacing: 20, // Adjust as needed
-                  crossAxisSpacing: 20, // Adjust as needed
+                  mainAxisSpacing: 20,
+                  crossAxisSpacing: 20,
                 ),
                 itemBuilder: (context, index) {
                   final page = myPages[index];
@@ -90,6 +138,15 @@ class HomeScreen extends StatelessWidget {
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
                               color: Colors.grey[800],
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          Text(
+                            page['description'],
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey[600],
                             ),
                           ),
                         ],

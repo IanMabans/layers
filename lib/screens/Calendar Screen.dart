@@ -13,6 +13,9 @@ class CalendarScreen extends StatefulWidget {
 }
 
 class _CalendarScreenState extends State<CalendarScreen> {
+  CalendarFormat _calendarFormat = CalendarFormat.month;
+  DateTime _selectedMonth = DateTime.now();
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -33,97 +36,187 @@ class _CalendarScreenState extends State<CalendarScreen> {
       ),
       body: Consumer<EggCollectionProvider>(
         builder: (context, provider, child) {
-          return TableCalendar(
-            firstDay: DateTime.utc(2021, 1, 1),
-            lastDay: DateTime.utc(2030, 12, 31),
-            focusedDay: DateTime.now(),
-            calendarFormat: CalendarFormat.month,
-            eventLoader: (day) {
-              return provider.collections
-                  .where((collection) => isSameDay(collection.date, day))
-                  .toList();
-            },
-            calendarBuilders: CalendarBuilders(
-              markerBuilder: (context, date, events) {
-                if (events.isNotEmpty) {
-                  return Positioned(
-                    right: 1,
-                    bottom: 1,
-                    child: Container(
-                      width: 16,
-                      height: 16,
-                      decoration: const BoxDecoration(
+          return Column(
+            children: [
+              TableCalendar(
+                firstDay: DateTime.utc(2021, 1, 1),
+                lastDay: DateTime.utc(2030, 12, 31),
+                focusedDay: _selectedMonth,
+                calendarFormat: _calendarFormat,
+                onFormatChanged: (format) {
+                  setState(() {
+                    _calendarFormat = format;
+                  });
+                },
+                onPageChanged: (focusedDay) {
+                  setState(() {
+                    _selectedMonth = focusedDay;
+                  });
+                },
+                eventLoader: (day) {
+                  final totalEggs = provider.collections
+                      .where((collection) => isSameDay(collection.date, day))
+                      .fold<int>(0, (sum, collection) => sum + collection.count);
+                  return totalEggs > 0 ? [totalEggs] : [];
+                },
+                calendarBuilders: CalendarBuilders(
+                  defaultBuilder: (context, date, _) {
+                    final events = provider.collections
+                        .where((collection) => isSameDay(collection.date, date))
+                        .toList();
+                    final hasEvents = events.isNotEmpty;
+
+                    return Container(
+                      decoration: BoxDecoration(
+                        color: hasEvents ? Colors.lightBlueAccent : null,
                         shape: BoxShape.circle,
-                        color: Colors.blue,
                       ),
                       child: Center(
                         child: Text(
-                          '${events.length}',
-                          style: const TextStyle().copyWith(
-                            color: Colors.white,
-                            fontSize: 12.0,
+                          '${date.day}',
+                          style: TextStyle(
+                            color: hasEvents ? Colors.white : Colors.black,
                           ),
                         ),
                       ),
-                    ),
-                  );
-                }
-                return null;
-              },
-            ),
-            onDaySelected: (selectedDay, focusedDay) {
-              final events = provider.collections
-                  .where(
-                      (collection) => isSameDay(collection.date, selectedDay))
-                  .toList();
-
-              showDialog(
-                context: context,
-                builder: (context) => AlertDialog(
-                  title: Text(
-                      'Details on ${selectedDay.toLocal().toString().split(' ')[0]}'),
-                  content: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: events.isEmpty
-                        ? [const Text('No data for this day.')]
-                        : events
-                        .map(
-                          (event) => ListTile(
-                        title: Text('Collected: ${event.count} eggs'),
-                        subtitle:
-                        Text('Feed Cost: \$${event.feedCost}'),
-                        trailing: IconButton(
-                          icon: const Icon(Icons.delete),
-                          onPressed: () =>
-                              _confirmDelete(context, provider, event),
+                    );
+                  },
+                  markerBuilder: (context, date, events) {
+                    if (events.isEmpty) return null;
+                    final totalEggs = events[0] as int;
+                    return Positioned(
+                      right: 1,
+                      bottom: 1,
+                      child: Container(
+                        width: 16,
+                        height: 16,
+                        decoration: const BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.blue,
+                        ),
+                        child: Center(
+                          child: Text(
+                            '$totalEggs',
+                            style: const TextStyle().copyWith(
+                              color: Colors.white,
+                              fontSize: 12.0,
+                            ),
+                          ),
                         ),
                       ),
-                    )
-                        .toList(),
-                  ),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(context),
-                      child: const Text('Close'),
-                    ),
-                    TextButton(
-                      onPressed: () {
-                        _showFeedCostDialog(context, provider, selectedDay);
-                      },
-                      child: const Text('Add Feed Cost'),
-                    ),
-                  ],
+                    );
+                  },
                 ),
-              );
-            },
+                onDaySelected: (selectedDay, focusedDay) {
+                  final events = provider.collections
+                      .where(
+                          (collection) => isSameDay(collection.date, selectedDay))
+                      .toList();
+
+                  showDialog(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      title: Text(
+                          'Details on ${selectedDay.toLocal().toString().split(' ')[0]}'),
+                      content: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: events.isEmpty
+                            ? [const Text('No data for this day.')]
+                            : events
+                            .map(
+                              (event) => ListTile(
+                            title: Text('Collected: ${event.count} eggs'),
+                            subtitle: Text('Feed Cost: \$${event.feedCost}'),
+                            trailing: IconButton(
+                              icon: const Icon(Icons.delete),
+                              onPressed: () => _confirmDelete(
+                                  context, provider, event),
+                            ),
+                          ),
+                        )
+                            .toList(),
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(context),
+                          child: const Text('Close'),
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            _showFeedCostDialog(
+                                context, provider, selectedDay);
+                          },
+                          child: const Text('Add Feed Cost'),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(height: 16.0),
+              _buildMonthlySummary(provider),
+            ],
           );
         },
       ),
     );
   }
 
-  void _showFeedCostDialog(
-      BuildContext context, EggCollectionProvider provider, DateTime date) {
+  Widget _buildMonthlySummary(EggCollectionProvider provider) {
+    final collections = provider.collections
+        .where((collection) =>
+    collection.date.year == _selectedMonth.year &&
+        collection.date.month == _selectedMonth.month)
+        .toList();
+
+    final totalEggs = collections.fold<int>(0, (sum, collection) => sum + collection.count);
+    final totalFeedCost = collections.fold<double>(0.0, (sum, collection) => sum + (collection.feedCost ?? 0.0));
+    final averageEggsPerDay = collections.isEmpty ? 0 : totalEggs / collections.length;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+      child: Card(
+        elevation: 4,
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            children: [
+              const Text(
+                'Monthly Summary',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8.0),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text('Total Eggs Collected:'),
+                  Text('$totalEggs'),
+                ],
+              ),
+              const SizedBox(height: 8.0),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text('Total Feed Cost:'),
+                  Text('\$${totalFeedCost.toStringAsFixed(2)}'),
+                ],
+              ),
+              const SizedBox(height: 8.0),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text('Average Eggs per Day:'),
+                  Text('${averageEggsPerDay.toStringAsFixed(1)}'),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showFeedCostDialog(BuildContext context, EggCollectionProvider provider, DateTime date) {
     final TextEditingController _costController = TextEditingController();
 
     showDialog(
@@ -153,8 +246,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
     );
   }
 
-  void _confirmDelete(
-      BuildContext context, EggCollectionProvider provider, EggCollection collection) {
+  void _confirmDelete(BuildContext context, EggCollectionProvider provider, EggCollection collection) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
