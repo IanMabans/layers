@@ -19,15 +19,16 @@ class EggCollectionProvider with ChangeNotifier {
 
   Future<void> updateFeedCost(DateTime date, double cost) async {
     EggCollection? existingCollection =
-        await DatabaseHelper().getEggCollectionByDate(date);
+    await DatabaseHelper().getEggCollectionByDate(date);
     if (existingCollection != null) {
       // Update the existing record with the new feed cost
       final updatedCollection = existingCollection.copyWith(
-          feedCost: cost + existingCollection.feedCost);
+          feedCost: cost + (existingCollection.feedCost ?? 0.0)); // Handle null value
       await DatabaseHelper().updateEggCollection(updatedCollection);
     } else {
       // Create a new record if none exists for the selected date
-      final newCollection = EggCollection(date: date, count: 0, feedCost: cost);
+      final newCollection =
+      EggCollection(date: date, count: 0, feedCost: cost);
       await addCollection(newCollection);
     }
     await fetchCollections();
@@ -40,15 +41,28 @@ class EggCollectionProvider with ChangeNotifier {
 
   Future<void> updateEggCount(DateTime date, int count) async {
     EggCollection? existingCollection =
-        await DatabaseHelper().getEggCollectionByDate(date);
+    await DatabaseHelper().getEggCollectionByDate(date);
     if (existingCollection != null) {
       final updatedCollection = existingCollection.copyWith(count: count);
       await DatabaseHelper().updateEggCollection(updatedCollection);
     } else {
       final newCollection =
-          EggCollection(date: date, count: count, feedCost: 0.0);
+      EggCollection(date: date, count: count, feedCost: 0.0);
       await addCollection(newCollection);
     }
     await fetchCollections();
+  }
+
+  Future<void> deleteCollection(int id) async {
+    await DatabaseHelper().deleteEggCollection(id);
+    await fetchCollections();
+  }
+
+  Future<void> deleteCollectionByDate(DateTime date) async {
+    final existingCollection =
+    await DatabaseHelper().getEggCollectionByDate(date);
+    if (existingCollection != null) {
+      await deleteCollection(existingCollection.id!);
+    }
   }
 }

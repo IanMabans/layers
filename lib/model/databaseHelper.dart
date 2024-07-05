@@ -46,15 +46,27 @@ class DatabaseHelper {
   }
 
   Future<EggCollection?> getEggCollectionByDate(DateTime date) async {
-    final db = await database;
-    final List<Map<String, dynamic>> maps = await db.query(
-      'egg_collections',
-      where: 'date = ?',
-      whereArgs: [date.toIso8601String()],
-    );
-    if (maps.isNotEmpty) {
-      return EggCollection.fromMap(maps.first);
+    try {
+      final db = await database;
+      final List<Map<String, dynamic>> maps = await db.query(
+        'egg_collections',
+        where: 'date = ?',
+        whereArgs: [date.toIso8601String()],
+      );
+
+      if (maps.isNotEmpty) {
+        return EggCollection.fromMap(maps.first);
+      } else {
+        return null;
+      }
+    } catch (e) {
+      print('Error getting collection by date: $e');
+      return null;
     }
-    return null;
+  }
+
+  Future<void> deleteEggCollection(int id) async {
+    final db = await database;
+    await db.delete('egg_collections', where: 'id = ?', whereArgs: [id]);
   }
 }

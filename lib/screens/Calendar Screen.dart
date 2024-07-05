@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:table_calendar/table_calendar.dart';
+import '../model/eggCollection.dart';
 import '../model/egg_collection_provider.dart';
 import '../reports/pdf_report_generator.dart';
 
@@ -22,7 +23,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
             icon: const Icon(Icons.picture_as_pdf),
             onPressed: () async {
               final provider =
-                  Provider.of<EggCollectionProvider>(context, listen: false);
+              Provider.of<EggCollectionProvider>(context, listen: false);
               final collections = provider.collections;
               final pdfGenerator = PdfReportGenerator();
               await pdfGenerator.generateReport(collections, context);
@@ -86,14 +87,19 @@ class _CalendarScreenState extends State<CalendarScreen> {
                     children: events.isEmpty
                         ? [const Text('No data for this day.')]
                         : events
-                            .map(
-                              (event) => ListTile(
-                                title: Text('Collected: ${event.count} eggs'),
-                                subtitle:
-                                    Text('Feed Cost: \$${event.feedCost}'),
-                              ),
-                            )
-                            .toList(),
+                        .map(
+                          (event) => ListTile(
+                        title: Text('Collected: ${event.count} eggs'),
+                        subtitle:
+                        Text('Feed Cost: \$${event.feedCost}'),
+                        trailing: IconButton(
+                          icon: const Icon(Icons.delete),
+                          onPressed: () =>
+                              _confirmDelete(context, provider, event),
+                        ),
+                      ),
+                    )
+                        .toList(),
                   ),
                   actions: [
                     TextButton(
@@ -141,6 +147,30 @@ class _CalendarScreenState extends State<CalendarScreen> {
               Navigator.pop(context);
             },
             child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _confirmDelete(
+      BuildContext context, EggCollectionProvider provider, EggCollection collection) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Confirm Delete'),
+        content: const Text('Are you sure you want to delete this record?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () async {
+              await provider.deleteCollection(collection.id!);
+              Navigator.popUntil(context, (route) => route.isFirst);
+            },
+            child: const Text('Delete'),
           ),
         ],
       ),

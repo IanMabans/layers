@@ -12,17 +12,17 @@ class HomeScreen extends StatelessWidget {
 
   final List<Map<String, dynamic>> myPages = [
     {
-      'name': 'Record Egg Counts',
+      'name': 'Record Eggs',
       'icon': Icons.egg,
       'route': const RecordEggCountsScreen(),
     },
     {
-      'name': 'View Data in Graphs',
+      'name': 'View Graphs',
       'icon': Icons.bar_chart,
       'route': const ViewDataInGraphsScreen(),
     },
     {
-      'name': 'Manage Calendar',
+      'name': 'View Calendar',
       'icon': Icons.calendar_today,
       'route': const CalendarScreen(),
     },
@@ -37,7 +37,8 @@ class HomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Farm App'),
+        centerTitle: true,
+        title: const Text('Mother Hen 🐔', style: TextStyle(fontSize: 34),),
       ),
       body: Padding(
         padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
@@ -72,6 +73,7 @@ class HomeScreen extends StatelessWidget {
                       );
                     },
                     child: Card(
+                      color: Colors.amberAccent,
                       elevation: 4,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(15),

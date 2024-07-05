@@ -26,8 +26,7 @@ class PdfReportGenerator {
             children: [
               pw.Text(
                 'Egg and Feed Cost Report',
-                style:
-                    pw.TextStyle(fontSize: 24, fontWeight: pw.FontWeight.bold),
+                style: pw.TextStyle(fontSize: 24, fontWeight: pw.FontWeight.bold),
               ),
               pw.SizedBox(height: 16),
               pw.Text(
@@ -40,10 +39,10 @@ class PdfReportGenerator {
                 data: <List<String>>[
                   <String>['Date', 'Egg Count', 'Feed Cost'],
                   ...collections.map(
-                    (collection) => [
+                        (collection) => [
                       dateFormat.format(collection.date),
                       collection.count.toString(),
-                      collection.feedCost.toStringAsFixed(2),
+                      (collection.feedCost ?? 0.0).toStringAsFixed(2), // Handle null values
                     ],
                   ),
                 ],
@@ -58,14 +57,14 @@ class PdfReportGenerator {
     if (await Permission.storage.request().isGranted) {
       final directory = await getExternalStorageDirectory();
       final downloadsDirectory =
-          Directory(path.join(directory!.path, 'Download'));
+      Directory(path.join(directory!.path, 'Download'));
 
       if (!downloadsDirectory.existsSync()) {
         downloadsDirectory.createSync(recursive: true);
       }
 
       final file =
-          File(path.join(downloadsDirectory.path, 'egg_feed_report.pdf'));
+      File(path.join(downloadsDirectory.path, 'egg_feed_report.pdf'));
       await file.writeAsBytes(await pdf.save());
 
       // Show dialog to open the PDF

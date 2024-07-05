@@ -2,23 +2,14 @@ class EggCollection {
   final int? id;
   final DateTime date;
   final int count;
-  final double feedCost;
+  final double? feedCost;
 
   EggCollection({
     this.id,
     required this.date,
     required this.count,
-    this.feedCost = 0.0,
+    this.feedCost,
   });
-
-  EggCollection copyWith({int? id, DateTime? date, int? count, double? feedCost}) {
-    return EggCollection(
-      id: id ?? this.id,
-      date: date ?? this.date,
-      count: count ?? this.count,
-      feedCost: feedCost ?? this.feedCost,
-    );
-  }
 
   Map<String, dynamic> toMap() {
     return {
@@ -34,10 +25,21 @@ class EggCollection {
       id: map['id'],
       date: DateTime.parse(map['date']),
       count: map['count'],
-      feedCost: map['feedCost'] ?? 0.0,
+      feedCost: map['feedCost'],
     );
   }
 
-  @override
-  String toString() => 'Egg Count: $count, Feed Cost: $feedCost';
+  EggCollection copyWith({
+    int? id,
+    DateTime? date,
+    int? count,
+    double? feedCost,
+  }) {
+    return EggCollection(
+      id: id ?? this.id,
+      date: date ?? this.date,
+      count: count ?? this.count,
+      feedCost: feedCost ?? this.feedCost,
+    );
+  }
 }
