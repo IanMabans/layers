@@ -1,18 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:table_calendar/table_calendar.dart';
-import '../model/eggCollection.dart';
-import '../model/egg_collection_provider.dart';
-import '../reports/pdf_report_generator.dart';
+import '../model/sale_model.dart';
+import '../model/sales_provider.dart';
+import 'RecordSalesScreen.dart';
 
-class CalendarScreen extends StatefulWidget {
-  const CalendarScreen({super.key});
+class SalesCalendarScreen extends StatefulWidget {
+  const SalesCalendarScreen({super.key});
 
   @override
-  State<CalendarScreen> createState() => _CalendarScreenState();
+  State<SalesCalendarScreen> createState() => _SalesCalendarScreenState();
 }
 
-class _CalendarScreenState extends State<CalendarScreen> {
+class _SalesCalendarScreenState extends State<SalesCalendarScreen> {
   CalendarFormat _calendarFormat = CalendarFormat.month;
   DateTime _selectedMonth = DateTime.now();
 
@@ -20,21 +20,9 @@ class _CalendarScreenState extends State<CalendarScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Manage Calendar'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.picture_as_pdf),
-            onPressed: () async {
-              final provider =
-              Provider.of<EggCollectionProvider>(context, listen: false);
-              final collections = provider.collections;
-              final pdfGenerator = PdfReportGenerator();
-              await pdfGenerator.generateReport(collections, context);
-            },
-          ),
-        ],
+        title: const Text('Sales Calendar'),
       ),
-      body: Consumer<EggCollectionProvider>(
+      body: Consumer<SalesProvider>(
         builder: (context, provider, child) {
           return Column(
             children: [
@@ -54,28 +42,27 @@ class _CalendarScreenState extends State<CalendarScreen> {
                   });
                 },
                 eventLoader: (day) {
-                  final totalEggs = provider.collections
-                      .where((collection) => isSameDay(collection.date, day))
-                      .fold<int>(0, (sum, collection) => sum + collection.count);
-                  return totalEggs > 0 ? [totalEggs] : [];
+                  return provider.sales
+                      .where((sale) => isSameDay(sale.date, day))
+                      .toList();
                 },
                 calendarBuilders: CalendarBuilders(
                   defaultBuilder: (context, date, _) {
-                    final events = provider.collections
-                        .where((collection) => isSameDay(collection.date, date))
+                    final sales = provider.sales
+                        .where((sale) => isSameDay(sale.date, date))
                         .toList();
-                    final hasEvents = events.isNotEmpty;
+                    final hasSales = sales.isNotEmpty;
 
                     return Container(
                       decoration: BoxDecoration(
-                        color: hasEvents ? Colors.lightBlueAccent : null,
+                        color: hasSales ? Colors.lightGreen : null,
                         shape: BoxShape.circle,
                       ),
                       child: Center(
                         child: Text(
                           '${date.day}',
                           style: TextStyle(
-                            color: hasEvents ? Colors.white : Colors.black,
+                            color: hasSales ? Colors.white : Colors.black,
                           ),
                         ),
                       ),
@@ -83,7 +70,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                   },
                   markerBuilder: (context, date, events) {
                     if (events.isEmpty) return null;
-                    final totalEggs = events[0] as int;
+                    final sale = events.first as Sales;
                     return Positioned(
                       right: 1,
                       bottom: 1,
@@ -92,11 +79,11 @@ class _CalendarScreenState extends State<CalendarScreen> {
                         height: 16,
                         decoration: const BoxDecoration(
                           shape: BoxShape.circle,
-                          color: Colors.blue,
+                          color: Colors.green,
                         ),
                         child: Center(
                           child: Text(
-                            '$totalEggs',
+                            '${sale.quantity}',
                             style: const TextStyle().copyWith(
                               color: Colors.white,
                               fontSize: 12.0,
@@ -108,29 +95,28 @@ class _CalendarScreenState extends State<CalendarScreen> {
                   },
                 ),
                 onDaySelected: (selectedDay, focusedDay) {
-                  final events = provider.collections
-                      .where(
-                          (collection) => isSameDay(collection.date, selectedDay))
+                  final sales = provider.sales
+                      .where((sale) => isSameDay(sale.date, selectedDay))
                       .toList();
 
                   showDialog(
                     context: context,
                     builder: (context) => AlertDialog(
                       title: Text(
-                          'Details on ${selectedDay.toLocal().toString().split(' ')[0]}'),
+                          'Sales on ${selectedDay.toLocal().toString().split(' ')[0]}'),
                       content: Column(
                         mainAxisSize: MainAxisSize.min,
-                        children: events.isEmpty
-                            ? [const Text('No data for this day.')]
-                            : events
+                        children: sales.isEmpty
+                            ? [const Text('No sales recorded for this day.')]
+                            : sales
                             .map(
-                              (event) => ListTile(
-                            title: Text('Collected: ${event.count} eggs'),
-                            subtitle: Text('Feed Cost: \$${event.feedCost}'),
+                              (sale) => ListTile(
+                            title: Text('Sold: ${sale.quantity} Trays'),
+                            subtitle: Text('Price: \$${sale.price}'),
                             trailing: IconButton(
                               icon: const Icon(Icons.delete),
                               onPressed: () => _confirmDelete(
-                                  context, provider, event),
+                                  context, provider, sale),
                             ),
                           ),
                         )
@@ -138,11 +124,8 @@ class _CalendarScreenState extends State<CalendarScreen> {
                       ),
                       actions: [
                         TextButton(
-                          onPressed: () {
-                            _showFeedCostDialog(
-                                context, provider, selectedDay);
-                          },
-                          child: const Text('Add Feed Cost'),
+                          onPressed: () => Navigator.pop(context),
+                          child: const Text('Close'),
                         ),
                       ],
                     ),
@@ -155,19 +138,29 @@ class _CalendarScreenState extends State<CalendarScreen> {
           );
         },
       ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (context) => const RecordSalesScreen()),
+          );
+        },
+        child: const Icon(Icons.add),
+      ),
     );
   }
 
-  Widget _buildMonthlySummary(EggCollectionProvider provider) {
-    final collections = provider.collections
-        .where((collection) =>
-    collection.date.year == _selectedMonth.year &&
-        collection.date.month == _selectedMonth.month)
+  Widget _buildMonthlySummary(SalesProvider provider) {
+    final sales = provider.sales
+        .where((sale) =>
+    sale.date.year == _selectedMonth.year &&
+        sale.date.month == _selectedMonth.month)
         .toList();
 
-    final totalEggs = collections.fold<int>(0, (sum, collection) => sum + collection.count);
-    final totalFeedCost = collections.fold<double>(0.0, (sum, collection) => sum + (collection.feedCost ?? 0.0));
-    final averageEggsPerDay = collections.isEmpty ? 0 : totalEggs / collections.length;
+    final totalSales = sales.fold<int>(0, (sum, sale) => sum + sale.quantity);
+    final totalRevenue = sales.fold<double>(0.0, (sum, sale) => sum + sale.price);
+    final averageSalesPerDay = sales.isEmpty ? 0 : totalSales / sales.length;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -185,24 +178,24 @@ class _CalendarScreenState extends State<CalendarScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text('Total Eggs Collected:'),
-                  Text('$totalEggs'),
+                  const Text('Total Sales:'),
+                  Text('$totalSales Trays'),
                 ],
               ),
               const SizedBox(height: 8.0),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text('Total Feed Cost:'),
-                  Text('\$${totalFeedCost.toStringAsFixed(2)}'),
+                  const Text('Total Revenue:'),
+                  Text('\$${totalRevenue.toStringAsFixed(2)}'),
                 ],
               ),
               const SizedBox(height: 8.0),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text('Average Eggs per Day:'),
-                  Text('${averageEggsPerDay.toStringAsFixed(1)}'),
+                  const Text('Average Sales per Day:'),
+                  Text(averageSalesPerDay.toStringAsFixed(2)),
                 ],
               ),
             ],
@@ -212,42 +205,13 @@ class _CalendarScreenState extends State<CalendarScreen> {
     );
   }
 
-  void _showFeedCostDialog(BuildContext context, EggCollectionProvider provider, DateTime date) {
-    final TextEditingController _costController = TextEditingController();
 
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Enter Feed Cost'),
-        content: TextField(
-          controller: _costController,
-          decoration: const InputDecoration(hintText: 'Enter cost'),
-          keyboardType: TextInputType.number,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () {
-              final cost = double.tryParse(_costController.text) ?? 0.0;
-              provider.updateFeedCost(date, cost);
-              Navigator.pop(context);
-            },
-            child: const Text('Save'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _confirmDelete(BuildContext context, EggCollectionProvider provider, EggCollection collection) {
+  void _confirmDelete(BuildContext context, SalesProvider provider, Sales sale) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Confirm Delete'),
-        content: const Text('Are you sure you want to delete this record?'),
+        content: const Text('Are you sure you want to delete this sale?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -255,8 +219,8 @@ class _CalendarScreenState extends State<CalendarScreen> {
           ),
           TextButton(
             onPressed: () async {
-              await provider.deleteCollection(collection.id!);
-              Navigator.popUntil(context, (route) => route.isFirst);
+              await provider.deleteSale(sale.id);
+              Navigator.pop(context);
             },
             child: const Text('Delete'),
           ),

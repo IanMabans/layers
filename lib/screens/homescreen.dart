@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'Calendar Screen.dart';
+import 'Calendar.dart';
 import 'Feeds.dart';
 import 'RecordEgg.dart';
 import 'View Data.dart';
+
 
 class HomeScreen extends StatelessWidget {
   HomeScreen({super.key});
@@ -35,6 +37,12 @@ class HomeScreen extends StatelessWidget {
       'description': 'Log feed expenses',
       'route': const RecordFeedCostScreen(),
     },
+    {
+      'name': 'Sales Calendar',  // Add the new Sales Calendar option
+      'icon': Icons.shopping_cart,
+      'description': 'Manage your sales calendar',
+      'route': const SalesCalendarScreen(),
+    },
   ];
 
   @override
@@ -59,7 +67,7 @@ class HomeScreen extends StatelessWidget {
         child: ListView(
           padding: EdgeInsets.zero,
           children: <Widget>[
-            DrawerHeader(
+            const DrawerHeader(
               decoration: BoxDecoration(
                 color: Colors.amberAccent,
               ),
@@ -72,14 +80,14 @@ class HomeScreen extends StatelessWidget {
               ),
             ),
             ListTile(
-              leading: Icon(Icons.account_circle),
+              leading: const Icon(Icons.account_circle),
               title: Text('Profile'),
               onTap: () {
                 // Navigate to profile screen (to be implemented)
               },
             ),
             ListTile(
-              leading: Icon(Icons.feedback),
+              leading: const Icon(Icons.feedback),
               title: Text('Feedback'),
               onTap: () {
                 // Navigate to feedback screen (to be implemented)

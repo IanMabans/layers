@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:path_provider/path_provider.dart';
@@ -8,15 +7,29 @@ import 'dart:io';
 import 'package:intl/intl.dart';
 import 'package:open_file/open_file.dart';
 import '../model/eggCollection.dart';
+import '../model/sale_model.dart';
+import '../model/salesDatabaseHelper.dart';
 
 class PdfReportGenerator {
   Future<void> generateReport(
       List<EggCollection> collections, BuildContext context) async {
-    // Sort collections by date in ascending order
+    // Fetch sales data
+    final sales = await SalesDatabaseHelper().getSales();
+
+    // Sort collections and sales by date in ascending order
     collections.sort((a, b) => a.date.compareTo(b.date));
+    sales.sort((a, b) => a.date.compareTo(b.date));
+
+    // Merge collections and sales by date
+    final combinedData = _mergeCollectionsAndSales(collections, sales);
 
     final pdf = pw.Document();
     final dateFormat = DateFormat('yyyy-MM-dd');
+
+    // Initialize cumulative totals
+    int cumulativeEggs = 0;
+    double cumulativeFeedCost = 0.0;
+    double cumulativeSales = 0.0;
 
     pdf.addPage(
       pw.Page(
@@ -25,7 +38,7 @@ class PdfReportGenerator {
             crossAxisAlignment: pw.CrossAxisAlignment.start,
             children: [
               pw.Text(
-                'Egg and Feed Cost Report',
+                'Egg, Feed Cost, and Sales Report',
                 style: pw.TextStyle(fontSize: 24, fontWeight: pw.FontWeight.bold),
               ),
               pw.SizedBox(height: 16),
@@ -37,13 +50,24 @@ class PdfReportGenerator {
               pw.Table.fromTextArray(
                 context: context,
                 data: <List<String>>[
-                  <String>['Date', 'Egg Count', 'Feed Cost'],
-                  ...collections.map(
-                        (collection) => [
-                      dateFormat.format(collection.date),
-                      collection.count.toString(),
-                      (collection.feedCost ?? 0.0).toStringAsFixed(2), // Handle null values
-                    ],
+                  <String>['Date', 'Egg Count', 'Feed Cost', 'Sales', 'Cumulative Eggs', 'Cumulative Feed Cost', 'Cumulative Sales'],
+                  ...combinedData.map(
+                        (data) {
+                      // Update cumulative totals
+                      cumulativeEggs += data['eggCount'] as int;
+                      cumulativeFeedCost += data['feedCost'] as double;
+                      cumulativeSales += data['sales'] as double;
+
+                      return [
+                        dateFormat.format(data['date']),
+                        data['eggCount'].toString(),
+                        data['feedCost'].toStringAsFixed(2),
+                        data['sales'].toStringAsFixed(2),
+                        cumulativeEggs.toString(),
+                        cumulativeFeedCost.toStringAsFixed(2),
+                        cumulativeSales.toStringAsFixed(2),
+                      ];
+                    },
                   ),
                 ],
               ),
@@ -64,7 +88,7 @@ class PdfReportGenerator {
       }
 
       final file =
-      File(path.join(downloadsDirectory.path, 'egg_feed_report.pdf'));
+      File(path.join(downloadsDirectory.path, 'egg_feed_sales_report.pdf'));
       await file.writeAsBytes(await pdf.save());
 
       // Show dialog to open the PDF
@@ -93,4 +117,42 @@ class PdfReportGenerator {
       print('Permission denied');
     }
   }
+
+  List<Map<String, dynamic>> _mergeCollectionsAndSales(
+      List<EggCollection> collections, List<Sales> sales) {
+
+    final Map<DateTime, Map<String, dynamic>> combinedData = {};
+
+    // Initialize combinedData with egg collections
+    for (var collection in collections) {
+      combinedData[collection.date] = {
+        'date': collection.date,
+        'eggCount': collection.count,
+        'feedCost': collection.feedCost ?? 0.0,
+        'sales': 0.0, // Initialize sales as 0.0
+      };
+    }
+
+    // Merge sales data into combinedData
+    for (var sale in sales) {
+      if (combinedData.containsKey(sale.date)) {
+        // Accumulate the price into the 'sales' field
+        combinedData[sale.date]!['sales'] += sale.price;
+      } else {
+        // If date not found, create a new entry
+        combinedData[sale.date] = {
+          'date': sale.date,
+          'eggCount': 0, // Initialize other fields as needed
+          'feedCost': 0.0,
+          'sales': sale.price, // Initialize 'sales' with sale price
+        };
+      }
+    }
+
+    // Convert combinedData map values to list and sort by date
+    return combinedData.values.toList()
+      ..sort((a, b) => a['date'].compareTo(b['date']));
+  }
+
 }
+
