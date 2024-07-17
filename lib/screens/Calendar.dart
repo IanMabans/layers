@@ -159,7 +159,11 @@ class _SalesCalendarScreenState extends State<SalesCalendarScreen> {
         .toList();
 
     final totalSales = sales.fold<int>(0, (sum, sale) => sum + sale.quantity);
+<<<<<<< HEAD
     final totalRevenue = sales.fold<double>(0.0, (sum, sale) => sum + sale.price);
+=======
+    final totalRevenue = sales.fold<double>(0.0, (sum, sale) => sum + sale.price * sale.quantity);
+>>>>>>> origin/master
     final averageSalesPerDay = sales.isEmpty ? 0 : totalSales / sales.length;
 
     return Padding(
@@ -195,7 +199,11 @@ class _SalesCalendarScreenState extends State<SalesCalendarScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   const Text('Average Sales per Day:'),
+<<<<<<< HEAD
                   Text(averageSalesPerDay.toStringAsFixed(2)),
+=======
+                  Text('${averageSalesPerDay.toStringAsFixed(1)} Trays'),
+>>>>>>> origin/master
                 ],
               ),
             ],
@@ -205,21 +213,35 @@ class _SalesCalendarScreenState extends State<SalesCalendarScreen> {
     );
   }
 
+<<<<<<< HEAD
 
   void _confirmDelete(BuildContext context, SalesProvider provider, Sales sale) {
+=======
+  void _confirmDelete(
+      BuildContext context, SalesProvider provider, Sales sale) {
+>>>>>>> origin/master
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Confirm Delete'),
+<<<<<<< HEAD
         content: const Text('Are you sure you want to delete this sale?'),
+=======
+        content: const Text('Are you sure you want to delete this sale record?'),
+>>>>>>> origin/master
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: const Text('Cancel'),
           ),
           TextButton(
+<<<<<<< HEAD
             onPressed: () async {
               await provider.deleteSale(sale.id);
+=======
+            onPressed: () {
+              provider.deleteSale(sale.id);
+>>>>>>> origin/master
               Navigator.pop(context);
             },
             child: const Text('Delete'),
