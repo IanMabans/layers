@@ -25,8 +25,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
           IconButton(
             icon: const Icon(Icons.picture_as_pdf),
             onPressed: () async {
-              final provider =
-              Provider.of<EggCollectionProvider>(context, listen: false);
+              final provider = Provider.of<EggCollectionProvider>(context, listen: false);
               final collections = provider.collections;
               final pdfGenerator = PdfReportGenerator();
               await pdfGenerator.generateReport(collections, context);
@@ -83,13 +82,13 @@ class _CalendarScreenState extends State<CalendarScreen> {
                   },
                   markerBuilder: (context, date, events) {
                     if (events.isEmpty) return null;
-                    final totalEggs = events[0] as int;
+                    final totalEggs = events.first as int;
                     return Positioned(
                       right: 1,
                       bottom: 1,
                       child: Container(
-                        width: 16,
-                        height: 16,
+                        width: 24,
+                        height: 24,
                         decoration: const BoxDecoration(
                           shape: BoxShape.circle,
                           color: Colors.blue,
@@ -99,7 +98,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                             '$totalEggs',
                             style: const TextStyle().copyWith(
                               color: Colors.white,
-                              fontSize: 12.0,
+                              fontSize: 10.0,
                             ),
                           ),
                         ),
@@ -109,8 +108,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                 ),
                 onDaySelected: (selectedDay, focusedDay) {
                   final events = provider.collections
-                      .where(
-                          (collection) => isSameDay(collection.date, selectedDay))
+                      .where((collection) => isSameDay(collection.date, selectedDay))
                       .toList();
 
                   showDialog(

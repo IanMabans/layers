@@ -5,12 +5,11 @@ import 'Feeds.dart';
 import 'RecordEgg.dart';
 import 'View Data.dart';
 
-
 class HomeScreen extends StatelessWidget {
   HomeScreen({super.key});
 
-  final double horizontalPadding = 40;
-  final double verticalPadding = 25;
+  final double horizontalPadding = 18;
+  final double verticalPadding = 18;
 
   final List<Map<String, dynamic>> myPages = [
     {
@@ -38,7 +37,7 @@ class HomeScreen extends StatelessWidget {
       'route': const RecordFeedCostScreen(),
     },
     {
-      'name': 'Sales Calendar',  // Add the new Sales Calendar option
+      'name': 'Sales Calendar',
       'icon': Icons.shopping_cart,
       'description': 'Manage your sales calendar',
       'route': const SalesCalendarScreen(),
@@ -81,14 +80,14 @@ class HomeScreen extends StatelessWidget {
             ),
             ListTile(
               leading: const Icon(Icons.account_circle),
-              title: Text('Profile'),
+              title: const Text('Profile'),
               onTap: () {
                 // Navigate to profile screen (to be implemented)
               },
             ),
             ListTile(
               leading: const Icon(Icons.feedback),
-              title: Text('Feedback'),
+              title: const Text('Feedback'),
               onTap: () {
                 // Navigate to feedback screen (to be implemented)
               },
@@ -115,7 +114,7 @@ class HomeScreen extends StatelessWidget {
                 itemCount: myPages.length,
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 2,
-                  childAspectRatio: 1 / 1.3,
+                  childAspectRatio: 1 / 1.2,
                   mainAxisSpacing: 20,
                   crossAxisSpacing: 20,
                 ),
@@ -128,37 +127,41 @@ class HomeScreen extends StatelessWidget {
                         MaterialPageRoute(builder: (context) => page['route']),
                       );
                     },
-                    child: Card(
-                      color: Colors.amberAccent,
-                      elevation: 4,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(15),
-                      ),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(page['icon'], size: 50, color: Colors.grey[800]),
-                          const SizedBox(height: 20),
-                          Text(
-                            page['name'],
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.grey[800],
-                            ),
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        return Card(
+                          color: Colors.amberAccent,
+                          elevation: 4,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(15),
                           ),
-                          const SizedBox(height: 10),
-                          Text(
-                            page['description'],
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: Colors.grey[600],
-                            ),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(page['icon'], size: 50, color: Colors.grey[800]),
+                              const SizedBox(height: 20),
+                              Text(
+                                page['name'],
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.grey[800],
+                                ),
+                              ),
+                              const SizedBox(height: 10),
+                              Text(
+                                page['description'],
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.grey[600],
+                                ),
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
+                        );
+                      },
                     ),
                   );
                 },

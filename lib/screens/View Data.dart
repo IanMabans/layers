@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:fl_chart/fl_chart.dart'; // New package for charts
+import 'package:fl_chart/fl_chart.dart';
 import '../model/eggCollection.dart';
 import '../model/egg_collection_provider.dart';
 
@@ -48,7 +48,7 @@ class GraphView extends StatelessWidget {
       DateTime endOfWeek = startOfWeek.add(const Duration(days: 6));
       return data.where((d) => d.date.isAfter(startOfWeek) && d.date.isBefore(endOfWeek)).toList();
     } else if (type == 'monthly') {
-      return data.where((d) => d.date.month == now.month && d.date.year == now.year).toList();
+      return data.where((d) => d.date.year == now.year).toList();
     } else {
       return data;
     }
@@ -60,20 +60,22 @@ class GraphView extends StatelessWidget {
     } else if (type == 'weekly') {
       return ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
     } else if (type == 'monthly') {
-      return ['Week 1', 'Week 2', 'Week 3', 'Week 4'];
+      return [
+        'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+      ];
     } else {
       return [];
     }
   }
 
-  double _getMaxY(String type) {
-    if (type == 'daily' || type == 'weekly') {
-      return 150;
-    } else if (type == 'monthly') {
-      return 1050;
-    } else {
-      return 0;
+  double _getMaxY(String type, List<EggCollection> data) {
+    double maxValue = data.fold(0, (prev, curr) => prev + curr.count.toDouble());
+    if (type == 'monthly') {
+      maxValue = 8000; // Fixed max value for monthly
+    } else if (maxValue == 0) {
+      maxValue = 100; // Default to 100 if maxValue is 0
     }
+    return maxValue > 8000 ? 8000 : maxValue; // Ensure maxY does not exceed 8000
   }
 
   Map<int, double> _aggregateWeeklyData(List<EggCollection> data) {
@@ -86,10 +88,10 @@ class GraphView extends StatelessWidget {
   }
 
   Map<int, double> _aggregateMonthlyData(List<EggCollection> data) {
-    Map<int, double> monthlyData = {0: 0, 1: 0, 2: 0, 3: 0};
+    Map<int, double> monthlyData = {1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0, 10: 0, 11: 0, 12: 0};
     for (var collection in data) {
-      int week = (collection.date.day - 1) ~/ 7;
-      monthlyData[week] = monthlyData[week]! + collection.count.toDouble();
+      int month = collection.date.month;
+      monthlyData[month] = monthlyData[month]! + collection.count.toDouble();
     }
     return monthlyData;
   }
@@ -106,7 +108,7 @@ class GraphView extends StatelessWidget {
           final weeklyData = _aggregateWeeklyData(data);
           barGroups = weeklyData.entries.map((entry) {
             return BarChartGroupData(
-              x: entry.key - 1,
+              x: entry.key - 1, // x axis starts from 0 for Monday
               barRods: [
                 BarChartRodData(
                   toY: entry.value,
@@ -120,7 +122,7 @@ class GraphView extends StatelessWidget {
           final monthlyData = _aggregateMonthlyData(data);
           barGroups = monthlyData.entries.map((entry) {
             return BarChartGroupData(
-              x: entry.key,
+              x: entry.key - 1, // x axis starts from 0 for January
               barRods: [
                 BarChartRodData(
                   toY: entry.value,
@@ -159,7 +161,7 @@ class GraphView extends StatelessWidget {
           child: BarChart(
             BarChartData(
               alignment: BarChartAlignment.spaceAround,
-              maxY: _getMaxY(type),
+              maxY: _getMaxY(type, data),
               barGroups: barGroups,
               titlesData: FlTitlesData(
                 leftTitles: AxisTitles(
@@ -169,7 +171,7 @@ class GraphView extends StatelessWidget {
                     getTitlesWidget: (value, meta) {
                       return Text(
                         value.toInt().toString(),
-                        style: TextStyle(color: Colors.black, fontSize: 12),
+                        style: const TextStyle(color: Colors.black, fontSize: 12),
                       );
                     },
                   ),
@@ -177,6 +179,7 @@ class GraphView extends StatelessWidget {
                 bottomTitles: AxisTitles(
                   sideTitles: SideTitles(
                     showTitles: true,
+                    reservedSize: 50, // Increased for better readability
                     getTitlesWidget: (value, meta) {
                       Widget text;
                       if (type == 'daily') {
@@ -184,7 +187,10 @@ class GraphView extends StatelessWidget {
                       } else if (type == 'weekly') {
                         text = Text(['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][value.toInt()]);
                       } else if (type == 'monthly') {
-                        text = Text('Week ${value.toInt() + 1}');
+                        text = RotatedBox(
+                          quarterTurns: 1,
+                          child: Text(xAxisLabels[value.toInt()]),
+                        );
                       } else {
                         text = const Text('Undefined');
                       }
@@ -194,14 +200,13 @@ class GraphView extends StatelessWidget {
                         child: text,
                       );
                     },
-                    reservedSize: 30,
                   ),
                 ),
               ),
               gridData: FlGridData(
                 show: true,
                 drawVerticalLine: true,
-                horizontalInterval: type == 'monthly' ? 150 : 30,
+                horizontalInterval: type == 'monthly' ? _getMaxY(type, data) / 5 : 30,
                 getDrawingHorizontalLine: (value) {
                   return FlLine(
                     color: Colors.grey.withOpacity(0.3),
@@ -221,7 +226,6 @@ class GraphView extends StatelessWidget {
               ),
               barTouchData: BarTouchData(
                 touchTooltipData: BarTouchTooltipData(
-                  // tooltipBgColor: Colors.blueAccent,
                   getTooltipItem: (group, groupIndex, rod, rodIndex) {
                     String label;
                     if (type == 'daily') {
@@ -229,11 +233,11 @@ class GraphView extends StatelessWidget {
                     } else if (type == 'weekly') {
                       label = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][group.x.toInt()];
                     } else {
-                      label = 'Week ${group.x + 1}';
+                      label = xAxisLabels[group.x.toInt()];
                     }
                     return BarTooltipItem(
                       '$label\n${rod.toY.toString()} eggs',
-                      TextStyle(color: Colors.white),
+                      const TextStyle(color: Colors.white),
                     );
                   },
                 ),
